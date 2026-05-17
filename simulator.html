@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RAG Simulator</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Inter,Segoe UI,sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    overflow-x:hidden;
+}
+
+.container{
+    width:95%;
+    max-width:1500px;
+    margin:auto;
+    padding:30px 0 60px;
+}
+
+.hero{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.hero h1{
+    font-size:52px;
+    margin-bottom:10px;
+    background:linear-gradient(90deg,#38bdf8,#818cf8);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.hero p{
+    color:#cbd5e1;
+    max-width:950px;
+    margin:auto;
+    line-height:1.7;
+    font-size:18px;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:320px 1fr;
+    gap:25px;
+}
+
+.panel{
+    background:#111827;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+
+.sidebar h2{
+    margin-bottom:20px;
+    font-size:22px;
+}
+
+.step{
+    padding:16px;
+    border-radius:16px;
+    margin-bottom:14px;
+    background:#1e293b;
+    cursor:pointer;
+    transition:0.3s;
+    border:1px solid transparent;
+}
+
+.step:hover{
+    transform:translateX(5px);
+    border-color:#38bdf8;
+}
+
+.step.active{
+    background:linear-gradient(135deg,#2563eb,#7c3aed);
+}
+
+.step small{
+    display:block;
+    margin-top:6px;
+    color:#dbeafe;
+    line-height:1.4;
+}
+
+.main{
+    display:flex;
+    flex-direction:column;
+    gap:25px;
+}
+
+.card{
+    background:#111827;
+    border-radius:22px;
+    padding:25px;
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.card h2{
+    margin-bottom:20px;
+}
+
+textarea,input{
+    width:100%;
+    background:#0f172a;
+    border:1px solid #334155;
+    border-radius:14px;
+    padding:15px;
+    color:white;
+    margin-top:10px;
+    font-size:15px;
+}
+
+button{
+    margin-top:15px;
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    border:none;
+    padding:14px 22px;
+    color:white;
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.03);
+}
+
+.output{
+    margin-top:20px;
+    background:#0f172a;
+    border-radius:16px;
+    padding:18px;
+    border:1px solid #334155;
+    line-height:1.7;
+}
+
+.chunk{
+    background:#1e293b;
+    padding:14px;
+    border-radius:12px;
+    margin-bottom:12px;
+    border-left:4px solid #38bdf8;
+}
+
+.vector{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+}
+
+.vector span{
+    background:#312e81;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:13px;
+}
+
+.retrieved{
+    border-left:4px solid #10b981;
+}
+
+.pipeline{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:20px;
+}
+
+.pipe{
+    background:#1e293b;
+    padding:12px 16px;
+    border-radius:12px;
+    font-size:14px;
+}
+
+.answer{
+    background:linear-gradient(135deg,#064e3b,#052e16);
+    padding:20px;
+    border-radius:16px;
+    margin-top:15px;
+    line-height:1.8;
+}
+
+.tag{
+    display:inline-block;
+    padding:6px 10px;
+    background:#1d4ed8;
+    border-radius:999px;
+    font-size:12px;
+    margin-bottom:12px;
+}
+
+@media(max-width:1000px){
+    .layout{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>🔍 RAG Simulator</h1>
+        <p>
+            Understand how Retrieval-Augmented Generation (RAG) works step-by-step.
+            This simulator demonstrates knowledge ingestion, chunking, embeddings,
+            semantic search, prompt augmentation, and grounded LLM response generation.
+        </p>
+    </div>
+
+    <div class="layout">
+
+        <!-- LEFT SIDEBAR -->
+        <div class="panel sidebar">
+
+            <h2>📚 RAG Pipeline</h2>
+
+            <div class="step active">
+                Step 1 — Knowledge Base
+                <small>Upload and clean documents</small>
+            </div>
+
+            <div class="step">
+                Step 2 — Chunking
+                <small>Break text into smaller chunks</small>
+            </div>
+
+            <div class="step">
+                Step 3 — Embeddings
+                <small>Convert chunks into vectors</small>
+            </div>
+
+            <div class="step">
+                Step 4 — Query Embedding
+                <small>Convert user query into vector</small>
+            </div>
+
+            <div class="step">
+                Step 5 — Similarity Search
+                <small>Find semantically relevant chunks</small>
+            </div>
+
+            <div class="step">
+                Step 6 — Prompt Augmentation
+                <small>Inject retrieved context</small>
+            </div>
+
+            <div class="step">
+                Step 7 — LLM Answer
+                <small>Generate grounded response</small>
+            </div>
+
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+
+            <!-- INPUT -->
+            <div class="card">
+
+                <div class="tag">Knowledge Base Input</div>
+
+                <h2>📄 Step 1 — Build Knowledge Base</h2>
+
+                <textarea id="knowledgeBase" rows="10">
+Chapter 1: How to Transition into Product Management.
+Learn stakeholder management, roadmap planning, customer empathy, prioritization, and product strategy.
+
+Chapter 2: Cracking the Product Manager Interview.
+Prepare for case studies, product design questions, metrics analysis, and behavioral interviews.
+
+Chapter 3: Product Management Skills.
+Strong communication, SQL, analytics, agile methodology, and problem-solving are important for PM roles.
+                </textarea>
+
+                <button onclick="processRAG()">Run RAG Pipeline</button>
+
+            </div>
+
+            <!-- CHUNKING -->
+            <div class="card">
+
+                <div class="tag">Chunking</div>
+
+                <h2>✂️ Step 2 — Document Chunking</h2>
+
+                <div id="chunksOutput"></div>
+
+            </div>
+
+            <!-- EMBEDDINGS -->
+            <div class="card">
+
+                <div class="tag">Embeddings</div>
+
+                <h2>🧠 Step 3 — Vector Embeddings</h2>
+
+                <div id="embeddingOutput"></div>
+
+            </div>
+
+            <!-- QUERY -->
+            <div class="card">
+
+                <div class="tag">User Query</div>
+
+                <h2>❓ Step 4 — Query Embedding</h2>
+
+                <input
+                    type="text"
+                    id="queryInput"
+                    value="How do I become a product manager?"
+                />
+
+                <button onclick="runSearch()">Generate Query Embedding</button>
+
+                <div id="queryEmbedding"></div>
+
+            </div>
+
+            <!-- SIMILARITY SEARCH -->
+            <div class="card">
+
+                <div class="tag">Semantic Search</div>
+
+                <h2>🔎 Step 5 — Similarity Search</h2>
+
+                <div id="searchResults"></div>
+
+            </div>
+
+            <!-- PROMPT -->
+            <div class="card">
+
+                <div class="tag">Prompt Augmentation</div>
+
+                <h2>🧩 Step 6 — Augmented Prompt</h2>
+
+                <div id="promptOutput"></div>
+
+            </div>
+
+            <!-- FINAL ANSWER -->
+            <div class="card">
+
+                <div class="tag">LLM Response</div>
+
+                <h2>🤖 Step 7 — Grounded LLM Response</h2>
+
+                <div id="finalAnswer"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let chunks = [];
+let chunkVectors = [];
+
+function fakeEmbedding(text){
+    let words = text.toLowerCase().split(" ");
+    return [
+        words.length,
+        (text.match(/product/g)||[]).length,
+        (text.match(/management/g)||[]).length,
+        (text.match(/interview/g)||[]).length,
+        Math.floor(Math.random()*10)+1
+    ];
+}
+
+function similarity(a,b){
+    let score = 0;
+    for(let i=0;i<a.length;i++){
+        score += a[i]*b[i];
+    }
+    return score;
+}
+
+function processRAG(){
+
+    const kb = document.getElementById("knowledgeBase").value;
+
+    chunks = kb.split(/\n\s*\n/);
+
+    const chunksOutput = document.getElementById("chunksOutput");
+    chunksOutput.innerHTML = "";
+
+    chunks.forEach((chunk,index)=>{
+        chunksOutput.innerHTML += `
+            <div class="chunk">
+                <strong>Chunk ${index+1}</strong>
+                <p>${chunk}</p>
+            </div>
+        `;
+    });
+
+    chunkVectors = [];
+
+    const embeddingOutput = document.getElementById("embeddingOutput");
+    embeddingOutput.innerHTML = "";
+
+    chunks.forEach((chunk,index)=>{
+
+        const vector = fakeEmbedding(chunk);
+        chunkVectors.push({
+            text:chunk,
+            vector
+        });
+
+        embeddingOutput.innerHTML += `
+            <div class="chunk">
+                <strong>Chunk ${index+1} Embedding</strong>
+
+                <div class="vector">
+                    ${vector.map(v=>`<span>${v}</span>`).join("")}
+                </div>
+            </div>
+        `;
+    });
+
+}
+
+function runSearch(){
+
+    const query = document.getElementById("queryInput").value;
+
+    const queryVector = fakeEmbedding(query);
+
+    document.getElementById("queryEmbedding").innerHTML = `
+        <div class="output">
+            <strong>Query Vector:</strong>
+
+            <div class="vector">
+                ${queryVector.map(v=>`<span>${v}</span>`).join("")}
+            </div>
+        </div>
+    `;
+
+    let scored = chunkVectors.map(chunk=>({
+        ...chunk,
+        score: similarity(queryVector,chunk.vector)
+    }));
+
+    scored.sort((a,b)=>b.score-a.score);
+
+    const topChunks = scored.slice(0,2);
+
+    const searchResults = document.getElementById("searchResults");
+
+    searchResults.innerHTML = "";
+
+    topChunks.forEach((item,index)=>{
+
+        searchResults.innerHTML += `
+            <div class="chunk retrieved">
+                <strong>Retrieved Chunk ${index+1}</strong>
+                <p>${item.text}</p>
+                <br/>
+                <strong>Similarity Score:</strong> ${item.score}
+            </div>
+        `;
+    });
+
+    const augmentedPrompt = `
+You are an AI assistant.
+
+Answer the following question ONLY using the retrieved context.
+
+User Query:
+"${query}"
+
+Retrieved Context:
+${topChunks.map(c=>c.text).join("\n\n")}
+    `;
+
+    document.getElementById("promptOutput").innerHTML = `
+        <div class="output">
+            <pre style="white-space:pre-wrap;color:#cbd5e1;">${augmentedPrompt}</pre>
+        </div>
+    `;
+
+    document.getElementById("finalAnswer").innerHTML = `
+        <div class="answer">
+            Based on the retrieved information, becoming a Product Manager requires
+            learning stakeholder management, roadmap planning, customer empathy,
+            analytics, agile methodology, communication skills, and interview preparation.
+            You should also prepare for PM case studies, metrics analysis, and product design questions.
+        </div>
+
+        <div class="pipeline">
+            <div class="pipe">Documents</div>
+            <div class="pipe">Chunking</div>
+            <div class="pipe">Embeddings</div>
+            <div class="pipe">Vector Search</div>
+            <div class="pipe">Prompt Augmentation</div>
+            <div class="pipe">LLM Response</div>
+        </div>
+    `;
+}
+
+processRAG();
+
+</script>
+
+</body>
+</html>
